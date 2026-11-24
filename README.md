@@ -141,7 +141,7 @@ Ready-to-run analog circuits targeting **GlobalFoundries GF180MCU** and **SkyWat
 
 | Circuit Family | GF180MCU | SKY130 |
 |---|---|---|
-| **Operational Amplifiers** | [`two_stage_ota`](benchmarks/gf180mcu/two_stage_ota) · [`folded_cascode_ota`](benchmarks/gf180mcu/folded_cascode_ota) · [`telescopic_ota`](benchmarks/gf180mcu/telescopic_ota) · [`five_t_ota`](benchmarks/gf180mcu/five_t_ota) | [`quickstart_amp`](benchmarks/sky130/quickstart_amp) · [`five_t_ota`](benchmarks/sky130/five_t_ota) · [`folded_cascode_ota`](benchmarks/sky130/folded_cascode_ota) · [`telescopic_cascode_ota`](benchmarks/sky130/telescopic_cascode_ota) · [`fully_differential_ota`](benchmarks/sky130/fully_differential_ota) |
+| **Operational Amplifiers** | [`two_stage_ota`](benchmarks/gf180mcu/two_stage_ota) · [`folded_cascode_ota`](benchmarks/gf180mcu/folded_cascode_ota) · [`telescopic_ota`](benchmarks/gf180mcu/telescopic_ota) · [`five_t_ota`](benchmarks/gf180mcu/five_t_ota) | [`quickstart_amp`](benchmarks/sky130/quickstart_amp) · [`five_t_ota`](benchmarks/sky130/five_t_ota) · [`two_stage_miller_ota`](benchmarks/sky130/two_stage_miller_ota) · [`folded_cascode_ota`](benchmarks/sky130/folded_cascode_ota) · [`telescopic_cascode_ota`](benchmarks/sky130/telescopic_cascode_ota) · [`fully_differential_ota`](benchmarks/sky130/fully_differential_ota) |
 | **Voltage Regulators** | [`ldo_regulator`](benchmarks/gf180mcu/ldo_regulator) | [`ldo_regulator`](benchmarks/sky130/ldo_regulator) |
 | **Voltage References** | [`bandgap_reference`](benchmarks/gf180mcu/bandgap_reference) | [`bandgap_reference`](benchmarks/sky130/bandgap_reference) |
 | **Mixed-Signal / RF / Bias** | [`cs_dac_4bit`](benchmarks/gf180mcu/cs_dac_4bit) | [`lc_tank_vco`](benchmarks/sky130/lc_tank_vco) · [`bias_tree`](benchmarks/sky130/bias_tree) |
@@ -169,6 +169,11 @@ python scripts/verify_oss_package.py
 ```
 
 Contributions—new open-PDK benchmarks, design primitives, placement/routing improvements, and bug fixes—are welcome via **Fork & Pull Request**. See [`CONTRIBUTING.md`](CONTRIBUTING.md) for guidelines.
+
+### Authors & Maintainers
+
+- **Zhaori Bi** ([@bzr2915](https://github.com/bzr2915)) — Fudan University
+- **[@Jiangyc08](https://github.com/Jiangyc08)** — Fudan University
 
 ---
 

@@ -9,7 +9,10 @@ description = "Clay: open-source intent-driven analog circuit compiler & C++20 p
 readme = "README.md"
 license = { text = "AGPL-3.0-only" }
 requires-python = ">=3.12"
-authors = [{ name = "Zhaori Bi", email = "zhaori_bi@fudan.edu.cn" }]
+authors = [
+    { name = "Zhaori Bi", email = "zhaori_bi@fudan.edu.cn" },
+    { name = "Jiangyc08", email = "2430XH20034@m.fudan.edu.cn" },
+]
 keywords = ["EDA", "analog", "layout", "sky130", "gf180mcu", "GDSII", "C++20", "PnR"]
 classifiers = [
     "Development Status :: 4 - Beta",
