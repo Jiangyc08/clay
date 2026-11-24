@@ -1,0 +1,173 @@
+// Open-reference benchmark: two-stage Miller-compensated OTA (sky130).
+//
+// Upstream source: diegohernando/caravel_fulgor_opamp — an open-source
+// two-stage Miller OTA taped out on the efabless/Google/SkyWater
+// caravel harness (sky130, Apache-2.0). This Clay port restates the
+// schematic netlist (opamp.spice) at device level. The upstream layout
+// (magic) passes netgen LVS (10 devices / 10 nets matched) and the
+// design was verified pre- and post-layout (true PEX): open-loop gain
+// ~64 dB, GBW ~13.1 MHz (pre) / ~14.8 MHz (post), PM ~91 deg,
+// TT corner, 27 C, 1.8 V, CL = 20 pF.
+//
+// ──────────────────────────────────────────────────────────────────
+// Topology — two-stage Miller OTA, PMOS input pair
+// ──────────────────────────────────────────────────────────────────
+//
+//   First stage (PMOS-input differential pair + NMOS mirror load):
+//     M1/M2 : PMOS input pair, gates = vin_n / vin_p, sources = vp
+//     M3    : NMOS diode load (gate = drain = vbn), sets the bias
+//     M4    : NMOS mirror load (gate = vbn), converts diff to single-
+//             ended output at voe1
+//     M5    : PMOS tail current source (gate = iref), biases the pair
+//
+//   Bias reference:
+//     M8    : PMOS diode (gate = drain = iref), reference current in
+//
+//   Second stage (NMOS common-source + PMOS load):
+//     M7    : PMOS active load (gate = iref), source = vdd
+//     M6    : NMOS common-source amplifier (gate = voe1, drain = vout)
+//
+//   Miller feedback network:
+//     M9    : NMOS level shifter (gate = vdd, source = voe1,
+//             drain = net1) — biases the Miller-cap bottom plate from
+//             the first-stage output node
+//     Cc    : MIM compensation capacitor, net1 -> vout
+//
+// Sizing is taken verbatim from the upstream netlist
+// (sky130_fd_pr__pfet_01v8 / sky130_fd_pr__nfet_01v8; W/L per finger,
+// M = the `mult` finger multiplicity):
+//   M1/M2  W=3u    L=0.3u  M=200   (input pair)
+//   M3/M4  W=3u    L=0.3u  M=30    (NMOS load / mirror)
+//   M5     W=3u    L=0.3u  M=30    (tail current source)
+//   M7     W=3u    L=0.3u  M=150   (second-stage PMOS load)
+//   M8     W=3u    L=0.3u  M=15    (bias diode)
+//   M9     W=0.75u L=0.15u M=6     (Miller-cap level shifter)
+//   M6     W=4.5u  L=0.45u M=150   (second-stage NMOS)
+//
+// Compensation cap: sky130_fd_pr__cap_mim_m3_1, 17.55u x 15u, 6
+// fingers (~2 fF/um^2 MIM density) ~= 3.16 pF. Clay's primitive `cap`
+// carries a lumped value, so the finger array is collapsed into the
+// equivalent bulk capacitance.
+
+package benchmarks.sky130;
+pdk "sky130";
+
+cell TwoStageMillerOTA(vdd, vss, vin_n, vin_p, iref, vout) {
+  topology {
+    // ─── First stage: PMOS input pair ─────────────────────────
+    device M1 : pmos {
+      drain  = vbn;
+      gate   = vin_n;
+      source = vp;
+      body   = vp;
+      W = 3u;
+      L = 0.3u;
+      M = 200;
+    }
+    device M2 : pmos {
+      drain  = voe1;
+      gate   = vin_p;
+      source = vp;
+      body   = vp;
+      W = 3u;
+      L = 0.3u;
+      M = 200;
+    }
+
+    // ─── First stage: NMOS diode + mirror load ────────────────
+    device M3 : nmos {
+      drain  = vbn;
+      gate   = vbn;
+      source = vss;
+      body   = vss;
+      W = 3u;
+      L = 0.3u;
+      M = 30;
+    }
+    device M4 : nmos {
+      drain  = voe1;
+      gate   = vbn;
+      source = vss;
+      body   = vss;
+      W = 3u;
+      L = 0.3u;
+      M = 30;
+    }
+
+    // ─── Tail current source + bias diode ─────────────────────
+    device M5 : pmos {
+      drain  = vp;
+      gate   = iref;
+      source = vdd;
+      body   = vdd;
+      W = 3u;
+      L = 0.3u;
+      M = 30;
+    }
+    device M8 : pmos {
+      drain  = iref;
+      gate   = iref;
+      source = vdd;
+      body   = vdd;
+      W = 3u;
+      L = 0.3u;
+      M = 15;
+    }
+
+    // ─── Second stage: NMOS common-source + PMOS load ─────────
+    device M7 : pmos {
+      drain  = vout;
+      gate   = iref;
+      source = vdd;
+      body   = vdd;
+      W = 3u;
+      L = 0.3u;
+      M = 150;
+    }
+    device M6 : nmos {
+      drain  = vout;
+      gate   = voe1;
+      source = vss;
+      body   = vss;
+      W = 4.5u;
+      L = 0.45u;
+      M = 150;
+    }
+
+    // ─── Miller feedback: level shifter + compensation cap ────
+    device M9 : nmos {
+      drain  = net1;
+      gate   = vdd;
+      source = voe1;
+      body   = vss;
+      W = 0.75u;
+      L = 0.15u;
+      M = 6;
+    }
+    cap Cc {
+      p = net1;
+      n = vout;
+      value = 3.16pF;
+    }
+  }
+
+  // ─── Spec ───────────────────────────────────────────────────
+  // Measured open-loop numbers from the upstream verification
+  // (true PEX, TT, 27 C, CL = 20 pF): gain ~64 dB, GBW ~14.8 MHz,
+  // PM ~91 deg. The envelope below is set from the pre-layout
+  // (conservative) side so the cell parses into a Spec without
+  // over-committing the eventual testbench.
+  spec {
+    gain_dc : real >= 60;
+    gbw     : freq >= 1e7;
+    cl      : cap  >= 2e-12;
+    vdd     : volt >= 1.8;
+  }
+}
+
+annotate TwoStageMillerOTA {
+  M1: @matching(M2);
+  M2: @matching(M1);
+  M3: @matching(M4);
+  M4: @matching(M3);
+}
