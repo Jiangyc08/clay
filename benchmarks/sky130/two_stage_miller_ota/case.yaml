@@ -1,0 +1,53 @@
+schema: clay.case/v1
+id: case_two_stage_miller_ota_sky130
+title: Two-stage Miller-compensated OTA, PMOS input (sky130, explicit netlist)
+category: opamp
+maturity: L2_COMPILE
+source:
+  clay: source/design.clay
+  top_cell: TwoStageMillerOTA
+  upstream: diegohernando/caravel_fulgor_opamp (sky130, Apache-2.0)
+metadata:
+  pdk: sky130
+  family: two_stage_miller_ota
+  topology_style: explicit_device_netlist
+  device_count: 10
+  matched_pairs:
+    - [M1, M2]
+    - [M3, M4]
+  design_intent:
+    - PMOS-input differential first stage with NMOS diode/mirror load (M1-M4) and PMOS tail bias (M5).
+    - NMOS common-source second stage (M6) with PMOS active load (M7), biased from the shared iref reference (M8).
+    - Series MIM Miller compensation (Cc ~3.16 pF) driven through an NMOS level shifter (M9) from the first-stage output.
+  external_references:
+    - https://github.com/diegohernando/caravel_fulgor_opamp
+    - https://github.com/google/skywater-pdk
+criteria:
+  structural:
+    mos_devices: 9
+    caps: 1
+    required_device_classes:
+      - pmos
+      - nmos
+    required_outputs:
+      - vout
+verify:
+  commands:
+    fast:
+      - python -m clay case validate .
+obligations:
+  required:
+    - parse
+    - compile
+gaps:
+  - Declared L2_COMPILE matches the evidence-computed level. The 10-device
+    two-stage Miller OTA parses and compiles; no GDS artifact is bundled
+    in Clay format, so it does not reach L4_LAYOUT_INTENT.
+  - Upstream open-source layout/verification evidence (magic layout,
+    netgen LVS 10/10 match, pre/post-layout simulation) exists in the
+    upstream repository but is not bundled here; only the device-level
+    topology is ported into Clay.
+  - PVT, PEX-in-Clay, layout, DRC/LVS, and signoff evidence are still
+    needed before L4/L5.
+  - Compensation cap is a lumped-value primitive; the upstream MIM
+    finger array (6 x 17.55u x 15u) is collapsed into ~3.16 pF.
